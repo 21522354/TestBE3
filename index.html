@@ -117,6 +117,11 @@
             font-size: 24px; /* Kích thước chữ của h1 */
         }
 
+        .original-price {
+            text-decoration: line-through; /* Gạch ngang chỉ phần giá tiền */
+            color: red; /* Màu sắc tùy chỉnh cho giá gốc */
+        }
+
         @keyframes spin {
             from {
                 transform: rotate(0deg);
@@ -290,26 +295,26 @@
             }
 
             currentItems.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.classList.add('item');
+            const itemElement = document.createElement('div');
+            itemElement.classList.add('item');
 
-                const color = getRatingColor(item.rating_average);
-                itemElement.innerHTML = `
-                    <img src="${item.image_url}" alt="${item.title}">
-                    <div class="item-details">
-                        <h3>${item.title}</h3>
-                        <p>Price: ${item.price.toLocaleString()} VND</p>
-                        <p>Original Price: ${item.original_price.toLocaleString()} VND</p>
-                        <p>Sold: ${item.sold}</p>
-                        <p>Reviews: ${item.review_count}</p>
-                        <p style="color: ${color}; font-weight: bold;">
-                            Average Rating: ${item.rating_average.toFixed(1)}
-                        </p>
-                        <a href="${item.product_link}" target="_blank">View Product</a>
-                    </div>
-                `;
-                itemsContainer.appendChild(itemElement);
-            });
+            const color = getRatingColor(item.rating_average);
+            itemElement.innerHTML = `
+                <img src="${item.image_url}" alt="${item.title}">
+                <div class="item-details">
+                    <h3>${item.title}</h3>
+                    <p>Giá hiện tại: ${item.price.toLocaleString()} VND</p>
+                    <p>Giá gốc: <span class="original-price">${item.original_price.toLocaleString()} VND</span></p>
+                    <p>Đã bán: ${item.sold}</p>
+                    <p>Số lượt đánh giá: ${item.review_count}</p>
+                    <p style="color: ${color}; font-weight: bold;">
+                        Đánh giá trung bình: ${item.rating_average.toFixed(1)}
+                    </p>
+                    <a href="${item.product_link}" target="_blank">Xem sản phẩm</a>
+                </div>
+            `;
+            itemsContainer.appendChild(itemElement);
+        });
 
             updatePagination();
         }
