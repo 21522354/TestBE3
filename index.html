@@ -281,7 +281,8 @@
                 name: fixedCategories[cat] || cat
             })));
         }
-    
+
+
         function renderItems() {
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
@@ -291,23 +292,23 @@
 
     
             itemsToDisplay.forEach(item => {
-                const itemElement = document.createElement('div');
+            const itemElement = document.createElement('div');
+            itemElement.className = 'item';
 
-                itemElement.className = 'item';
-                itemElement.innerHTML = `
-
-                    <p>Giá bán: <strong>${item.price.toLocaleString()} VND</strong></p>
-                    <p class="original-price">Giá gốc: ${item.original_price.toLocaleString()} VND</p>
-                    <p>Đã bán: ${item.sold}</p>
-                    <p>Đánh giá: ${item.rating_average} ★</p>
-                    <p>Số lượng đánh giá: ${item.review_count}</p>
-                    <p>Chênh lệch giá: ${item.price_difference.toLocaleString()} VND</p>
-                    <p>Chỉ số QoP: ${item.QoP.toFixed(2)}</p>
-                    <p>QoP dự đoán: ${item.Predicted_QoP.toFixed(2)}</p>
-                    <p>Khuyến nghị: <strong>${item.recommendation}</strong></p>
-                `;
-                itemsContainer.appendChild(itemElement);
-            });
+            itemElement.innerHTML = `
+                <img src="${item.image_url}" alt="${item.title}" class="item-image" />
+                <h3>${item.title}</h3>
+                <p>Giá bán: <strong>${item.price.toLocaleString()} VND</strong></p>
+                <p class="original-price">Giá gốc: ${item.original_price.toLocaleString()} VND</p>
+                <p>Đã bán: ${item.sold}</p>
+                <p>Đánh giá: ${item.rating_average} ★</p>
+                <p>Số lượng đánh giá: ${item.review_count}</p>
+                <p>Chênh lệch giá: ${item.price_difference.toLocaleString()} VND</p>
+                <p>Khuyến nghị: <strong>${item.recommendation}</strong></p>
+                <a href="${item.product_link}" target="_blank">Xem sản phẩm</a>
+            `;
+            itemsContainer.appendChild(itemElement);
+        });
     
             updatePagination();
         }
@@ -321,23 +322,27 @@
         }
     
         function filterItems() {
-            const category = categoryFilter.value;
-            const name = searchName.value.toLowerCase();
-            const min = parseFloat(minPrice.value) || 0;
-            const max = parseFloat(maxPrice.value) || Infinity;
-    
-            filteredItems = items.filter(item => {
-                return (
-                    (category === '' || item.category === category) &&
-                    (name === '' || item.category.toLowerCase().includes(name)) &&
-                    item.price >= min &&
-                    item.price <= max
-                );
-            });
-    
-            currentPage = 1;
-            renderItems();
-        }
+        const category = categoryFilter.value; // Key danh mục
+        const name = searchName.value.toLowerCase(); // Tên cần tìm
+        const min = parseFloat(minPrice.value) || 0;
+        const max = parseFloat(maxPrice.value) || Infinity;
+
+
+        filteredItems = items.filter(item => {
+            return (
+                (category === '' || item.category === category) && // Lọc theo key danh mục
+                (name === '' || item.title.toLowerCase().includes(name)) && // So sánh với tên sản phẩm
+                item.price >= min &&
+                item.price <= max
+            );
+        });
+        
+
+
+        currentPage = 1;
+        renderItems();
+    }
+
     
         prevPageButton.addEventListener('click', () => {
             if (currentPage > 1) {
