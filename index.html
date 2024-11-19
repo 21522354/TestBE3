@@ -295,6 +295,16 @@
             const itemElement = document.createElement('div');
             itemElement.className = 'item';
 
+            // Kiểm tra giá trị của recommendation và thay đổi màu sắc của nó
+            let recommendationText = item.recommendation;
+            let recommendationStyle = '';
+
+            if (recommendationText.toLowerCase() === 'nên mua') {
+                recommendationStyle = 'color: green;';
+            } else if (recommendationText.toLowerCase() === 'không nên mua') {
+                recommendationStyle = 'color: red;';
+            }
+
             itemElement.innerHTML = `
                 <img src="${item.image_url}" alt="${item.title}" class="item-image" />
                 <h3>${item.title}</h3>
@@ -304,7 +314,7 @@
                 <p>Đánh giá: ${item.rating_average} ★</p>
                 <p>Số lượng đánh giá: ${item.review_count}</p>
                 <p>Chênh lệch giá: ${item.price_difference.toLocaleString()} VND</p>
-                <p>Khuyến nghị: <strong>${item.recommendation}</strong></p>
+                <p>Khuyến nghị: <strong style="${recommendationStyle}">${recommendationText}</strong></p>
                 <a href="${item.product_link}" target="_blank">Xem sản phẩm</a>
             `;
             itemsContainer.appendChild(itemElement);
