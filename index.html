@@ -197,12 +197,12 @@
     
 
     <script>
-        const apiEndpoint = 'https://a0f4425e-2c11-4e87-ba3a-44ec6d51b3c7.mock.pstmn.io/fetchDataTiki'; // Replace with your actual API endpoint
-        const itemsPerPage = 9; // Thay đổi số item mỗi trang thành 9 (3 cột mỗi trang)
+        const jsonFilePath = './processed_info_with_recommendations.json'; // Đường dẫn đến file JSON
+        const itemsPerPage = 9; // Số item mỗi trang
         let items = [];
         let filteredItems = [];
         let currentPage = 1;
-
+    
         const itemsContainer = document.getElementById('itemsContainer');
         const categoryFilter = document.getElementById('categoryFilter');
         const searchName = document.getElementById('searchName');
@@ -212,27 +212,27 @@
         const prevPageButton = document.getElementById('prevPage');
         const nextPageButton = document.getElementById('nextPage');
         const pageInfo = document.getElementById('pageInfo');
-
-        async function fetchItems() {
+    
+        async function fetchItemsFromJSON() {
             const loadingElement = document.getElementById('loading');
             itemsContainer.innerHTML = '';
             loadingElement.style.display = 'flex';
-
+    
             try {
-                const response = await fetch(apiEndpoint);
+                const response = await fetch(jsonFilePath);
                 items = await response.json();
-                console.log('Fetched items:', items); // Debug: Check API data
+                console.log('Fetched items:', items); // Debug: Kiểm tra dữ liệu từ file JSON
                 filteredItems = items;
                 renderItems();
-                populateCategories(); // Populate category filter dynamically
+                populateCategories(); // Cập nhật danh mục
             } catch (error) {
-                console.error('Error fetching items:', error);
-                itemsContainer.innerHTML = '<p>Error loading items. Please try again later.</p>';
+                console.error('Error fetching items from JSON:', error);
+                itemsContainer.innerHTML = '<p>Lỗi khi tải dữ liệu từ file JSON.</p>';
             } finally {
                 loadingElement.style.display = 'none';
             }
         }
-
+    
         function populateCategories() {
             const fixedCategories = {
                 nha_sach_tiki: "Nhà Sách Tiki",
@@ -281,106 +281,85 @@
                 name: fixedCategories[cat] || cat
             })));
         }
-
+    
         function renderItems() {
-            itemsContainer.innerHTML = '';
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
-            const currentItems = filteredItems.slice(startIndex, endIndex);
+            const itemsToDisplay = filteredItems.slice(startIndex, endIndex);
+    
+            itemsContainer.innerHTML = '';
 
-            if (currentItems.length === 0) {
-                itemsContainer.innerHTML = `<p>Không tìm thấy sản phẩm nào. Vui lòng thử danh mục khác hoặc điều chỉnh bộ lọc.</p>`;
-                updatePagination();
-                return;
-            }
+    
+            itemsToDisplay.forEach(item => {
+                const itemElement = document.createElement('div');
 
-            currentItems.forEach(item => {
-            const itemElement = document.createElement('div');
-            itemElement.classList.add('item');
+                itemElement.className = 'item';
+                itemElement.innerHTML = `
 
-            const color = getRatingColor(item.rating_average);
-            itemElement.innerHTML = `
-                <img src="${item.image_url}" alt="${item.title}">
-                <div class="item-details">
-                    <h3>${item.title}</h3>
-                    <p>Giá hiện tại: ${item.price.toLocaleString()} VND</p>
-                    <p>Giá gốc: <span class="original-price">${item.original_price.toLocaleString()} VND</span></p>
+                    <p>Giá bán: <strong>${item.price.toLocaleString()} VND</strong></p>
+                    <p class="original-price">Giá gốc: ${item.original_price.toLocaleString()} VND</p>
                     <p>Đã bán: ${item.sold}</p>
-                    <p>Số lượt đánh giá: ${item.review_count}</p>
-                    <p style="color: ${color}; font-weight: bold;">
-                        Đánh giá trung bình: ${item.rating_average.toFixed(1)}
-                    </p>
-                    <a href="${item.product_link}" target="_blank">Xem sản phẩm</a>
-                </div>
-            `;
-            itemsContainer.appendChild(itemElement);
-        });
-
+                    <p>Đánh giá: ${item.rating_average} ★</p>
+                    <p>Số lượng đánh giá: ${item.review_count}</p>
+                    <p>Chênh lệch giá: ${item.price_difference.toLocaleString()} VND</p>
+                    <p>Chỉ số QoP: ${item.QoP.toFixed(2)}</p>
+                    <p>QoP dự đoán: ${item.Predicted_QoP.toFixed(2)}</p>
+                    <p>Khuyến nghị: <strong>${item.recommendation}</strong></p>
+                `;
+                itemsContainer.appendChild(itemElement);
+            });
+    
             updatePagination();
         }
-
-        function getRatingColor(rating) {
-            if (rating >= 4) {
-                return 'green';
-            } else if (rating >= 3) {
-                return 'orange';
-            } else {
-                return 'red';
-            }
-        }
-
+    
         function updatePagination() {
             const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
             pageInfo.textContent = `Trang ${currentPage} / ${totalPages}`;
-
+    
             prevPageButton.disabled = currentPage === 1;
             nextPageButton.disabled = currentPage === totalPages;
         }
-
-        function filterItemsByPrice() {
+    
+        function filterItems() {
+            const category = categoryFilter.value;
+            const name = searchName.value.toLowerCase();
             const min = parseFloat(minPrice.value) || 0;
             const max = parseFloat(maxPrice.value) || Infinity;
-
-            filteredItems = items.filter(item => item.price >= min && item.price <= max);
-            currentPage = 1; // Reset to the first page after filtering
+    
+            filteredItems = items.filter(item => {
+                return (
+                    (category === '' || item.category === category) &&
+                    (name === '' || item.category.toLowerCase().includes(name)) &&
+                    item.price >= min &&
+                    item.price <= max
+                );
+            });
+    
+            currentPage = 1;
             renderItems();
         }
-
-        function filterItemsByCategory() {
-            const category = categoryFilter.value;
-            filteredItems = category ? items.filter(item => item.category === category) : items;
-            currentPage = 1; // Reset to the first page after filtering
-            renderItems();
-        }
-
-        searchName.addEventListener('input', () => {
-            const searchText = searchName.value.toLowerCase();
-            filteredItems = items.filter(item => item.title.toLowerCase().includes(searchText));
-            currentPage = 1; // Reset to the first page after search
-            renderItems();
-        });
-
-        categoryFilter.addEventListener('change', filterItemsByCategory);
-
-        priceFilterButton.addEventListener('click', filterItemsByPrice);
-
+    
         prevPageButton.addEventListener('click', () => {
             if (currentPage > 1) {
                 currentPage--;
                 renderItems();
             }
         });
-
+    
         nextPageButton.addEventListener('click', () => {
-            const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-            if (currentPage < totalPages) {
+            if (currentPage < Math.ceil(filteredItems.length / itemsPerPage)) {
                 currentPage++;
                 renderItems();
             }
         });
-
-        // Fetch initial items on load
-        fetchItems();
+    
+        priceFilterButton.addEventListener('click', filterItems);
+        categoryFilter.addEventListener('change', filterItems);
+        searchName.addEventListener('input', filterItems);
+    
+        // Gọi hàm load dữ liệu từ file JSON khi trang được load
+        fetchItemsFromJSON();
     </script>
+    
 </body>
 </html>
